@@ -1,2 +1,6 @@
 /.eldev
 /Eldev-local
+/hotfuzz-module.dll
+/hotfuzz-module.exp
+/hotfuzz-module.lib
+/hotfuzz-module.o
