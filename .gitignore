@@ -4,3 +4,4 @@
 /hotfuzz-module.exp
 /hotfuzz-module.lib
 /hotfuzz-module.o
+/pthread.o

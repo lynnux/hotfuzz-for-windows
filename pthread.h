@@ -1,46 +1,43 @@
 #ifndef PTHREAD_H
 #define PTHREAD_H
 #include <Windows.h>
-#include <functional>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-typedef HANDLE pthread_t;
+typedef struct PortableThread PortableThread;
+typedef PortableThread *pthread_t;
 
-struct pthread_mutex_t {
-  long locker_;
-  pthread_mutex_t() : locker_(0) {}
-  void lock() {
-    while (InterlockedCompareExchange(&locker_, 1, 0) != 0)
-      Sleep(0);
-  }
-  void unlock() { InterlockedExchange(&locker_, 0); }
-};
+typedef long pthread_mutex_t;
 
-int pthread_mutex_init(pthread_mutex_t *, void *) { return 0; }
-int pthread_mutex_lock(pthread_mutex_t *m) { m->lock(); }
-void pthread_mutex_unlock(pthread_mutex_t *m) { m->unlock(); }
-int pthread_mutex_destroy(pthread_mutex_t *m) { return 0; }
-
-int pthread_create(pthread_t *thread, void *, LPTHREAD_START_ROUTINE start_rtn,
-                   void *arg) {
-  *thread = CreateThread(NULL, 0, start_rtn, arg, 0, 0);
+static int pthread_mutex_init(pthread_mutex_t *m, void *) {
+  *m = 0;
   return 0;
 }
-int pthread_join(pthread_t thread, void **retval) {
-  WaitForSingleObject(thread, INFINITE);
-  if(retval){
-      DWORD code;
-      GetExitCodeThread(thread, &code);
-      *retval = 0;
-      *((DWORD*)retval) = code;
-  }
-  CloseHandle(thread);
+static int pthread_mutex_lock(pthread_mutex_t *m) {
+  while (InterlockedCompareExchange(m, 1, 0) != 0)
+    Sleep(0);
   return 0;
 }
+static void pthread_mutex_unlock(pthread_mutex_t *m) {
+  InterlockedExchange(m, 0);
+}
+static int pthread_mutex_destroy(pthread_mutex_t *m) { return 0; }
 
-unsigned int get_CPU_core_num() {
+typedef void *(__cdecl *PTHREAD_START_ROUTINE1)(void *);
+int pthread_create(pthread_t *thread, void *,
+                   PTHREAD_START_ROUTINE1 start_routine, void *arg);
+int pthread_join(pthread_t thread, void **retval);
+
+#define _SC_NPROCESSORS_ONLN
+static unsigned int sysconf() {
   SYSTEM_INFO info;
   GetSystemInfo(&info);
   return info.dwNumberOfProcessors;
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* PTHREAD_H */
