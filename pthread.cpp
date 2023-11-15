@@ -4,6 +4,7 @@
 #include <thread>
 struct PortableThread : public std::thread {
     void *ret;
+
    public:
     PortableThread(const void *attr, PTHREAD_START_ROUTINE1 start_routine,
                    void *arg)
@@ -18,7 +19,7 @@ int pthread_create(pthread_t *pthread, void *attr,
     try {
         t = new PortableThread(attr, start_routine, arg);
     } catch (const std::system_error &e) {
-        printf("Caught system_error %s\n", e.what());
+        // printf("Caught system_error %s\n", e.what());
         return -1;
     }
     *pthread = t;
@@ -34,9 +35,11 @@ int pthread_join(pthread_t thread, void **retval) {
         thread->join();
         *retval = thread->ret;
     } catch (const std::system_error &e) {
-        printf("Caught system_error %s\n", e.what());
+        delete thread;
+        // printf("Caught system_error %s\n", e.what());
         return -1;
     }
+    delete thread;
     return 0;
 }
 }
